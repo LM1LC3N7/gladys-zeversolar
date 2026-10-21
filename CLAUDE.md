@@ -65,17 +65,26 @@ test/                             node --test, against the SDK's fake Gladys, a 
 - **Energy monitoring**: `production_index` (`energy-production-sensor` /
   `index`, with its `thirty-minutes-production` declared with UUID v5 ids) is
   the only index. It is built from the counter of the day by `src/daily.js`
-  (a new day never drops it; any doubt counts less, never more) and passes
-  `IndexGuard` (`src/guard.js`): never 0, a drop and a jump never confirmed by
-  repetition nor by time, only by the `accept_held_index` action, bounded to
-  the value shown. Never published at night. `energy_today` stays the
-  inverter's counter (`daily-production`): never an index, never
-  `publishEnergyConsumption`. Do not change `src/daily.js` or `src/guard.js`
-  without the same change in gladys-imeon / gladys-p1-monitor and a review.
+  (a new day never drops it; doubts are settled on the side of counting
+  less) and passes `IndexGuard` (`src/guard.js`): never 0, a drop and a jump
+  never confirmed by repetition nor by time; a jump taken only by the
+  `accept_held_index` action, bounded to the value shown; a drop NEVER
+  accepted (it corrects itself, review 1 I2). The counter of the day before
+  shown again is kept out by `keptOut` in `src/app.js` (its marks in /data,
+  review 1 B1/I1); both use the installation's `maxKw` (peak power typed,
+  else learned, 2 to 30 kW, I3). Risk left, documented: a day before shown
+  more than 0.1 kWh above the last value read, or a wrong reading within
+  `maxKw` since the last read. Never published at night. `energy_today` stays
+  the inverter's counter (`daily-production`), not sent when kept out: never
+  an index, never `publishEnergyConsumption`. Do not change `src/daily.js` or
+  `src/guard.js` without the same change in gladys-imeon / gladys-p1-monitor
+  and a review.
 - **The night is not an error** (see TODO.md "Decisions"): asleep after three
-  silent reads with a low power, at once when the board answers 0 inverter,
-  after an hour of silence whatever the power. Red only for a vanished
-  producing inverter, a wrong answer, a day without any reading.
+  silent reads with a low power, at once when its own board answers 0
+  inverter after a low power, after an hour of silence whatever the power.
+  Red for a producing inverter that vanishes (or whose board answers without
+  it), another board at the address, a wrong answer, a day without any
+  reading.
 - **The pace**: never two reads less than the interval apart, whatever asks;
   the time of the last read is in `/data`. Never add a read path that skips
   `dueAt()`.

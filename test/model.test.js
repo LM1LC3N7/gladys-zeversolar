@@ -10,8 +10,12 @@ import { README_EXAMPLES, REGISTRY_KEY, page } from './fixtures/zeversolar.js';
 
 test('the five examples of the library README', () => {
   const [one, two, three, four, five] = README_EXAMPLES.map(parseHome);
+  assert.match(one.board, /^[0-9a-f]{12}$/);
+  assert.equal(four.board, five.board, 'the same board, with or without inverter');
+  assert.notEqual(one.board, two.board);
   assert.deepEqual(one, {
     kind: 'reading',
+    board: one.board,
     hardware: 'M10',
     software: '16415-562R+16413-561R',
     cloudOk: false,
@@ -32,6 +36,7 @@ test('the five examples of the library README', () => {
   assert.equal(four.energyToday, 19.7);
   assert.deepEqual(five, {
     kind: 'asleep',
+    board: five.board,
     hardware: 'M11',
     software: '16B21-663R+16B21-658R',
     cloudOk: false,

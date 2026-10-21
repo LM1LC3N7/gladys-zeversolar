@@ -154,11 +154,15 @@ export const within = (value, max) =>
 /**
  * The states of a read. `reading`: the parsed page (`kind: 'reading'`).
  * `index`: the value the guard let through (undefined: not published).
+ * `energyToday` false: the counter read is the day before shown again (kept
+ * out of the index, review 1 M2): not sent either.
  */
-export function readingStates(external, reading, index) {
+export function readingStates(external, reading, index, { energyToday = true } = {}) {
   return [
     ...state(external, FEATURE.POWER, within(reading.power, POWER_MAX), 0),
-    ...state(external, FEATURE.ENERGY_TODAY, within(reading.energyToday, DAY_ENERGY_MAX), 2),
+    ...(energyToday
+      ? state(external, FEATURE.ENERGY_TODAY, within(reading.energyToday, DAY_ENERGY_MAX), 2)
+      : []),
     // The index: never 0 (the guard never lets 0 through, checked again here).
     ...(isNumber(index) && index > 0 ? state(external, FEATURE.PRODUCTION_INDEX, index, 3) : []),
     ...state(external, FEATURE.AWAKE, 1, 0),

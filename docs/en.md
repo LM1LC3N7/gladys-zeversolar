@@ -32,6 +32,10 @@ no power limit).
    inverter sleeps and does not answer), and save.
 3. Open the "Discover" tab and create the device. Its values come at the next
    read (within a minute by day).
+4. Optional but recommended: enter the peak power of your panels (kWp, on the
+   installer's invoice). It bounds what the energy index may take between two
+   reads. Left empty, it is learned from the power the inverter reaches over a
+   week (30 kW until then, which lets more odd readings through).
 
 The "Test the connection" button reads the inverter if a read is due, and
 otherwise tells the last read: the integration never reads more than once a
@@ -43,9 +47,11 @@ A Zeversolar inverter is powered by its panels: at sunset it stops, and its
 Wi-Fi board either answers without production or goes silent. That is not an
 error: after three silent reads (or at once when the board says so), the
 inverter is "asleep", its power goes to 0, the status stays green and says so,
-and it is read every 5 minutes until it wakes up. The status turns red only if
-the inverter vanishes while producing, answers something that is not its
-status page, or gives no reading for more than a day.
+and it is read every 5 minutes until it wakes up. The status turns red if the
+inverter vanishes (or its board answers without it) while producing 50 W or
+more, if another Wi-Fi board answers at the address, if the answer is not its
+status page, or if there is no reading for more than a day; after an hour of
+silence it is considered asleep anyway.
 
 ## The energy index
 
@@ -54,20 +60,32 @@ never a lifetime counter, while the Gladys energy monitoring counts the rises
 of a cumulative index. So the integration builds one: the index goes on from
 its last value and adds what the counter of the day adds. It never goes back
 to 0 and never drops: a new day (the counter back to 0 in the morning) leaves
-it where it was. Any doubt counts less, never more: a reboot of the inverter
-during the day, a counter that jumps, hours without reads around the change of
-day.
+it where it was. When the inverter shows the counter of the day before again
+(at sunrise, or after a restart during the day), that value is kept out of the
+index and out of the energy of the day. Doubts are settled on the side of
+counting less: a reboot of the inverter that really resets its counter during
+the day, a counter that jumps (the rest of that day may then be lost), hours
+without reads around the change of day, a wall clock set wrong.
 
-The index also goes through a guard: a jump or a drop of the index itself is
-held back, shown in the integration status, and only taken when you click
-"Accept the held index" in the configuration (a jump is then counted at once,
-a drop counts nothing). Saving the configuration never accepts it.
+Risk left (it would count too much): a value of the day before shown again
+more than 0.1 kWh above the last value read, or any wrong reading that fits
+within the peak power of the installation since the last read. Entering the
+peak power keeps that margin small.
+
+The index also goes through a guard: a jump of the index itself is held back,
+shown in the integration status, and only taken when you click "Accept the
+held index" in the configuration (it is then counted at once). A drop of the
+index is never accepted: it corrects itself, the index goes on once the
+counter is back above it. Saving the configuration never accepts anything.
 
 ## Limits
 
 - Only the first inverter is read when the Wi-Fi board reports several.
 - The energy of the day comes as the library reads it: one decimal digit is
   a missing zero ("14.9" means 14.09 kWh).
+- Production after the local midnight (far north in June, or a Gladys time
+  zone east of the house): the reset of the counter falls on the same local
+  day and that day is undercounted.
 - The integration needs Gladys 5.2.0 or later.
 
 ## Privacy
@@ -75,7 +93,8 @@ a drop counts nothing). Saving the configuration never accepts it.
 Nothing leaves your network: the integration only talks to the address you
 entered, with one small GET a minute (every 5 minutes at night). The registry
 key of the Wi-Fi board (its key for the maker's cloud) is never kept, logged
-or shown.
+or shown; of its registry id only a short fingerprint is kept (to tell one
+board from another).
 
 ## Feedback
 

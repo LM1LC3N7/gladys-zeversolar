@@ -56,6 +56,24 @@ export const TEST_ANSWER_WITHIN = 20 * SECOND;
  * average between two reads (the largest Zeversolar inverters are 20 kW).
  */
 export const INDEX_MAX_KW = 30;
+/**
+ * The margin actually used is the installation's (review 1, I3): 1.25 x the
+ * peak power typed in the configuration, else 1.5 x the highest power read
+ * over the last 30 days (once 7 days are known), bounded to these (kW).
+ * INDEX_MAX_KW until then.
+ */
+export const MAX_KW_MIN = 2;
+export const MAX_KW_MAX = INDEX_MAX_KW;
+/** Days of power peaks needed before the learned margin is used, and kept. */
+export const PEAK_DAYS_MIN = 7;
+export const PEAK_DAYS_KEPT = 30;
+/**
+ * The counter of the day before (B1, I1): a read within this band above it
+ * (and 5 Wh below) at sunrise, or back on it later the same day while
+ * today's counter is well below it, is the day before shown again: kept out.
+ */
+export const STALE_BAND_KWH = 0.1;
+export const STALE_BELOW_KWH = 0.005;
 /** kWh always accepted on top of INDEX_MAX_KW x hours (rounding, a late read). */
 export const INDEX_SLACK_KWH = 0.5;
 /** A counter of the day back to at most this (kWh) may be a new day. */

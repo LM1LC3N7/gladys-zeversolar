@@ -59,8 +59,13 @@
 // A Zeversolar inverter sleeps at night (no sun, no answer): its counter drops
 // at sunrise, out of the midnight window, after hours without reads, the last
 // value taken from the day before: the "earlier local day" rule takes it, as
-// a real cut across midnight. A stale value of the day before at sunrise is
-// kept out by the app (src/app.js, `staleCounter`).
+// a real cut across midnight. That makes the "risk left" above a daily one
+// here (every sunrise is a cut, the undo after a gap never applies): the app
+// keeps the day before shown again out of this index (src/app.js `keptOut`:
+// within 0.1 kWh of the last value taken at sunrise, or of the value of the
+// day before later that same day, both kept in /data), review 1 B1 and I1.
+// Left: a day before shown more than 0.1 kWh above the last value read, or a
+// wrong reading within the installation's margin (the app's `maxKw`).
 //
 // Whatever comes out still passes the IndexGuard, which holds any jump or
 // drop of the built index.

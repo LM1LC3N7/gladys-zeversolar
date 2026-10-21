@@ -29,6 +29,14 @@ const REASON = {
     en: 'not the status page of a Zeversolar inverter',
     fr: 'ce n’est pas la page d’état d’un onduleur Zeversolar',
   },
+  no_inverter: {
+    en: 'the Wi-Fi board answers without its inverter, right after it produced',
+    fr: 'la carte Wi-Fi répond sans son onduleur, juste après qu’il a produit',
+  },
+  other_board: {
+    en: 'another Wi-Fi board answers at this address, without inverter',
+    fr: 'une autre carte Wi-Fi répond à cette adresse, sans onduleur',
+  },
 };
 
 export function reason(err) {
@@ -135,8 +143,8 @@ export const T = {
     held: ({ direction, from, to }) => {
       if (direction === 'down') {
         return {
-          en: `The solar production index dropped from ${kwh(from)} to ${kwh(to)} kWh: held back, the last accepted value is sent again. If it is right, click "Accept the held index" in the configuration of the integration: nothing is counted for the drop, the index goes on from there. Saving the configuration accepts nothing.`,
-          fr: `L’index de production solaire a baissé de ${kwh(from)} à ${kwh(to)} kWh : retenu, la dernière valeur acceptée est renvoyée. Si c’est juste, cliquez sur « Accepter l’index retenu » dans la configuration de l’intégration : rien n’est compté pour la baisse, l’index repart de là. Enregistrer la configuration n’accepte rien.`,
+          en: `The solar production index built from the counter of the day went back from ${kwh(from)} to ${kwh(to)} kWh: held back, the last accepted value is sent again. Nothing to do: the index corrects itself and goes on once the counter is back above it (what is not back is not counted).`,
+          fr: `L’index de production solaire construit à partir du compteur du jour est revenu de ${kwh(from)} à ${kwh(to)} kWh : retenu, la dernière valeur acceptée est renvoyée. Rien à faire : l’index se corrige seul et reprend quand le compteur l’a rattrapé (ce qui ne revient pas n’est pas compté).`,
         };
       }
       const diff = kwh(to - from);
@@ -151,16 +159,15 @@ export const T = {
       en: 'No index is held back: nothing to accept.',
       fr: 'Aucun index n’est retenu : rien à accepter.',
     },
-    done: ({ direction, from, to }) =>
-      direction === 'down'
-        ? {
-            en: `Accepted: the solar production index goes from ${kwh(from)} down to ${kwh(to)} kWh at the next read; 0 kWh is counted for the drop. A different value stays held.`,
-            fr: `Accepté : l’index de production solaire passe de ${kwh(from)} à ${kwh(to)} kWh à la prochaine lecture ; 0 kWh est compté pour la baisse. Une autre valeur reste retenue.`,
-          }
-        : {
-            en: `Accepted: the solar production index ${kwh(to)} kWh will be sent at the next read, and ${kwh(to - from)} kWh (plus what comes meanwhile) will be counted at once. A different value stays held.`,
-            fr: `Accepté : l’index de production solaire ${kwh(to)} kWh sera envoyé à la prochaine lecture, et ${kwh(to - from)} kWh (plus ce qui vient d’ici là) seront comptés d’un coup. Une autre valeur reste retenue.`,
-          },
+    /** A drop of the built index: never accepted (it corrects itself), review 1 I2. */
+    drop: {
+      en: 'The index held back is a drop: it is never accepted, it corrects itself and goes on once the counter of the day is back above it. Nothing to accept.',
+      fr: 'L’index retenu est une baisse : elle n’est jamais acceptée, l’index se corrige seul et reprend quand le compteur du jour l’a rattrapé. Rien à accepter.',
+    },
+    done: ({ from, to }) => ({
+      en: `Accepted: the solar production index ${kwh(to)} kWh will be sent at the next read, and ${kwh(to - from)} kWh (plus what comes meanwhile) will be counted at once. A different value stays held.`,
+      fr: `Accepté : l’index de production solaire ${kwh(to)} kWh sera envoyé à la prochaine lecture, et ${kwh(to - from)} kWh (plus ce qui vient d’ici là) seront comptés d’un coup. Une autre valeur reste retenue.`,
+    }),
   },
   test: {
     /** The outcome of a read, `ago` ms ago (0: just now), the next one in `next` ms. */

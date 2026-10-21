@@ -24,11 +24,12 @@ export function page({
   version,
   hardware = 'M10',
   separator = '\n',
+  registry = 'EAB961777777',
 } = {}) {
   const head = [
     '1',
     '1',
-    'EAB961777777',
+    registry,
     REGISTRY_KEY,
     hardware,
     '17717-709R+17511-707R',

@@ -7,6 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { ACTIONS } from '../src/constants.js';
+import { normalizeConfig } from '../src/config.js';
 import { buildDevice } from '../src/devices.js';
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
@@ -88,11 +89,22 @@ test('every text is in English and French; placeholders too', () => {
   }
 });
 
-test('the configuration matches the code: an address only, no secret', () => {
+test('the configuration matches the code: an address, an optional peak power, no secret', () => {
   const fields = Object.fromEntries(manifest.config_schema.map((f) => [f.key, f]));
-  assert.deepEqual(Object.keys(fields), ['intro', 'address']);
+  assert.deepEqual(Object.keys(fields), ['intro', 'address', 'peak_power_kw']);
   assert.equal(fields.address.type, 'string');
   assert.equal(fields.address.required, true);
+  assert.equal(fields.peak_power_kw.type, 'number');
+  assert.equal(fields.peak_power_kw.required, false);
+  assert.equal(
+    normalizeConfig({ address: 'a', peak_power_kw: fields.peak_power_kw.max }).peakKw,
+    100,
+  );
+  assert.equal(
+    normalizeConfig({ address: 'a', peak_power_kw: fields.peak_power_kw.min }).peakKw,
+    0.1,
+  );
+  assert.ok(!manifest.config_schema.some((f) => f.type === 'secret'));
   for (const link of fields.intro.links) {
     assert.match(link.url, /^https:\/\//);
   }

@@ -20,9 +20,10 @@ the notes of the version's GitHub Release.
 - One device per inverter (`inverter:<serial>`): solar power, energy of the
   day, inverter awake, inverter fault, link to the maker's cloud.
 - A solar production index for the Gladys energy monitoring, built from the
-  counter of the day (a new day never drops it, any doubt counts less) and
-  checked by the guard of gladys-p1-monitor: never 0, a jump or a drop held
-  back and taken only by the "Accept the held index" button; its 30-minute
+  counter of the day (a new day never drops it, doubts settled on the side of
+  counting less) and checked by the guard of gladys-p1-monitor: never 0, a
+  jump or a drop held back, a jump taken only by the "Accept the held index"
+  button; its 30-minute
   production declared with stable ids.
 - The night: three silent reads (or a Wi-Fi board answering without inverter)
   and the inverter is asleep: power 0, green status, no index; red only for
@@ -33,5 +34,16 @@ the notes of the version's GitHub Release.
   to 4 KiB and 10 s, no redirect followed, every field checked.
 - Read-only: none of the library's commands (on/off, power limit) is ported.
 - Guides in English and French, cover image, third-party notices in the image.
+- An optional peak power of the installation (kWp): the margin of the energy
+  index, the same for the daily index and the guard; learned from the power
+  read over a week when empty (2 to 30 kW).
+- The counter of the day before shown again (at sunrise, or after a restart
+  during the day, up to 0.1 kWh above the last value read) is kept out of the
+  index and of the energy of the day; its marks are kept in `/data`.
+- A drop of the built index is never accepted: it corrects itself.
+- A Wi-Fi board answering without its inverter right after production, or
+  another board at the address, is red and writes nothing into the device.
+- A new address of the same inverter reaches the Discovery list at its first
+  reading.
 
 [Unreleased]: https://github.com/LM1LC3N7/gladys-zeversolar/commits/main

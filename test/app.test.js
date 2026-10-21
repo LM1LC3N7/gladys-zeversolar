@@ -206,7 +206,7 @@ test('the night: asleep after 3 silent reads, power 0, the index never 0 nor dro
 test('sunrise with the counter of the day before: no index until the new day starts', async () => {
   const device = created({ index: { value: 500, at: NOW - MINUTE } });
   const { gladys, inverter, start, wait, app } = await setup({ devices: [device] });
-  inverter.set({ power: 100, energy: '8.00' });
+  inverter.set({ power: 20, energy: '8.00' });
   await start();
   assert.equal(last(gladys, 'production_index'), 500);
   inverter.set({ count: 0 });
@@ -413,7 +413,7 @@ test('another inverter at the address: its values go to its own device, never th
   inverter.set({ power: 1000, energy: '2.0' });
   await start();
   assert.equal(last(gladys, 'power'), 1000);
-  inverter.set({ serial: 'ZS15004513777777', power: 50, energy: '9.0' });
+  inverter.set({ serial: 'ZS15004513777777', power: 30, energy: '9.0' });
   await wait(POLL_INTERVAL);
   assert.equal(last(gladys, 'power'), 1000, 'the old device keeps its value');
   assert.equal(last(gladys, 'power', 'ZS15004513777777'), undefined);

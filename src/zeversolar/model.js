@@ -7,7 +7,7 @@
 //
 //   0  WIFI_ENABLED          0 | 1
 //   1  ?                     an integer
-//   2  SERIAL_OR_REGISTRY_ID the registry id of the Wi-Fi board (never kept)
+//   2  SERIAL_OR_REGISTRY_ID the registry id of the Wi-Fi board (only a short fingerprint kept)
 //   3  REGISTRY_KEY          its key for the maker's cloud (never kept, never shown)
 //   4  HARDWARE_VERSION      M10 | M11 (known values)
 //   5  SOFTWARE_VERSION      e.g. 16415-562R+16413-561R
@@ -33,7 +33,19 @@
 // from the answer's own keys.
 // -----------------------------------------------------------------------------
 
+import { createHash } from 'node:crypto';
 import { MAX_FIELDS } from '../constants.js';
+
+/**
+ * A short fingerprint of the registry id of the Wi-Fi board (field 2, not
+ * the key): tells one board from another (a page without inverter carries no
+ * serial), without keeping the id itself. Undefined when the field is odd.
+ */
+export function boardOf(id) {
+  return typeof id === 'string' && /^[A-Za-z0-9_-]{4,40}$/.test(id)
+    ? createHash('sha256').update(`zeversolar-board:${id}`).digest('hex').slice(0, 12)
+    : undefined;
+}
 
 const SERIAL = /^[A-Za-z0-9_-]{4,40}$/;
 const HARDWARE = /^[A-Za-z0-9._-]{1,16}$/;
@@ -84,7 +96,7 @@ export function parseHome(text) {
   if (fields.length > MAX_FIELDS || fields.length <= 9) {
     return undefined;
   }
-  const [wifi, unknown, , , hardware, software, time, date, cloud, count] = fields;
+  const [wifi, unknown, registryId, , hardware, software, time, date, cloud, count] = fields;
   if (
     !/^\d$/.test(wifi) ||
     !/^\d{1,3}$/.test(unknown) ||
@@ -100,6 +112,7 @@ export function parseHome(text) {
     return undefined;
   }
   const base = {
+    board: boardOf(registryId),
     hardware,
     software: SOFTWARE.test(software) ? software : null,
     cloudOk,

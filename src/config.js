@@ -57,7 +57,24 @@ export function normalizeConfig(raw = {}) {
     invalidAddress:
       Boolean(parsed.error) ||
       (typeof raw?.address === 'string' && value === '' && raw.address !== ''),
+    peakKw: peakOf(raw?.peak_power_kw),
   };
+}
+
+/**
+ * The optional peak power of the installation (kWp, manifest `peak_power_kw`):
+ * a number from 0.1 to 100, else undefined (the margin is then learned).
+ */
+export function peakOf(raw) {
+  const text = typeof raw === 'string' ? raw.trim().replace(',', '.') : raw;
+  if (text === '' || text === null || text === undefined) {
+    return undefined;
+  }
+  if (typeof text === 'string' && !/^\d{1,3}(\.\d{1,3})?$/.test(text)) {
+    return undefined;
+  }
+  const value = Number(text);
+  return Number.isFinite(value) && value >= 0.1 && value <= 100 ? value : undefined;
 }
 
 /** Whether the form is complete enough to read the inverter. */
