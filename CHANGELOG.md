@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-21
+
 ### Added
 
 - Local reading of Zeversolar solar inverters through the status page of their
@@ -46,4 +48,5 @@ the notes of the version's GitHub Release.
 - A new address of the same inverter reaches the Discovery list at its first
   reading.
 
-[Unreleased]: https://github.com/LM1LC3N7/gladys-zeversolar/commits/main
+[Unreleased]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/LM1LC3N7/gladys-zeversolar/releases/tag/v0.1.1
