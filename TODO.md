@@ -27,6 +27,15 @@
       14.09: the morning undone around each X.10, then held drops (a review
       scenario: 47.65 counted 28.88, less). Proper tenths would count a little
       less (47.04), never more.
+- [ ] Field 2 of the page (registry id, or serial "if 01 == 0|3" per the
+      README) is the same by night and by day (review 2, m3): otherwise the
+      board fingerprint changes at night and "another Wi-Fi board" turns red
+      every night. README examples 4 and 5 (the same board by day and by
+      night) say it is.
+- [ ] A peak power typed lower than the real one (review 2, m4) narrows the
+      margin: a long silence at noon can lose the rest of the day (less).
+      The docs and the manifest say never to type less, and to leave it
+      empty in doubt.
 - [ ] Production after the local midnight (review 1, M3: far north in June,
       or a Gladys time zone east of the house): the reset at wake-up falls on
       the same local day and is refused (Helsinki scenario 84.08 -> 28.71,
@@ -76,7 +85,13 @@
     last 30 local days (`peaks` in /data, one per day) once 7 days are known,
     else 30 kW; rounded up to 0.5 kW, bounded 2 to 30 kW. When it changes,
     the guard and the daily index are built again from their own state (a
-    pending acceptance is then dropped: the user accepts again). Note: after a
+    pending acceptance is then dropped: the user accepts again; to do later
+    (review 2): apply it again after the rebuild when `held.to` did not
+    change). The peaks are shared by every serial (review 2, m2: a DHCP swap
+    to a bigger inverter widens the margin of the first one; to do later:
+    keep them per serial). A power above 1.5 x the typed peak power is never
+    a peak; above 1.5 x the highest of the last 30 days, only when seen
+    twice in a row (review 2, m1: a 65535 W error value). Note: after a
     jump, `src/daily.js` takes nothing more that day (the margin then runs
     from each refused read): the rest of the day is lost (less);
   - the counter drops at sunrise, after a night without reads: the "earlier
@@ -86,16 +101,16 @@
   - review 1, B1 and I1 (`keptOut` in `src/app.js`, marks per index in
     /data `ref`): (a) at a new day, `dayBefore = { day, value: max(the last
 value of the day before, the highest stale value kept out at that
-sunrise) }`; (b) a read of that local day within [dayBefore - 5 Wh,
+sunrise) }`; (b) a read of that local day within [dayBefore - 0.1 kWh,
     dayBefore + 0.1 kWh] while the counter taken today is under dayBefore -
     0.1 kWh is kept out (a reboot showing the day before again); (c) at
     sunrise (a later local day than the last value taken), a read within
-    [last - 5 Wh, last + 0.1 kWh] is kept out (`staleSeen`); (d) a read kept
+    [last - 0.1 kWh, last + 0.1 kWh] is kept out (`staleSeen`); (d) a read kept
     out moves nothing (not a counter read) and its `energy_today` is not sent
     (M2). A slow pass of the real counter through the band costs nothing (it
     is a rise, taken once above it). Replayed on the review scenarios (Z0 to
     Z9, Z1e, Z3e, Z3s, Z6, Z6b): no excess left. Risk left, documented: a
-    day before shown more than 0.1 kWh above the last value read, or a wrong
+    day before shown more than 0.1 kWh from the last value read (above or below; review 2, R1: the band below was 5 Wh, a day before 0.05 kWh under our last read counted up to +4.5 kWh), or a wrong
     reading within `maxKw` since the last read;
   - review 1, I2: a DROP of the built index is never accepted (it only
     happens when the daily index takes back values already published, or a

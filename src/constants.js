@@ -68,12 +68,17 @@ export const MAX_KW_MAX = INDEX_MAX_KW;
 export const PEAK_DAYS_MIN = 7;
 export const PEAK_DAYS_KEPT = 30;
 /**
- * The counter of the day before (B1, I1): a read within this band above it
- * (and 5 Wh below) at sunrise, or back on it later the same day while
- * today's counter is well below it, is the day before shown again: kept out.
+ * The counter of the day before (B1, I1): a read within this band of it,
+ * above OR below (review 2, R1: an inverter that saves its counter now and
+ * then shows a value a little under our last read), at sunrise, or back on it
+ * later the same day while today's counter is well below it, is the day
+ * before shown again: kept out. Cost: up to 0.1 kWh at the end of a day that
+ * ends within 0.1 kWh of the day before.
  */
 export const STALE_BAND_KWH = 0.1;
-export const STALE_BELOW_KWH = 0.005;
+export const STALE_BELOW_KWH = STALE_BAND_KWH;
+/** A power above this many times the peak (typed, or of the last 30 days) is a glitch unless seen twice in a row. */
+export const PEAK_OUTLIER = 1.5;
 /** kWh always accepted on top of INDEX_MAX_KW x hours (rounding, a late read). */
 export const INDEX_SLACK_KWH = 0.5;
 /** A counter of the day back to at most this (kWh) may be a new day. */

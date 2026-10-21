@@ -42,6 +42,7 @@ import {
   PAUSE_MIN,
   PEAK_DAYS_KEPT,
   PEAK_DAYS_MIN,
+  PEAK_OUTLIER,
   POLL_INTERVAL,
   POWER_MAX,
   RETRY_MAX,
@@ -155,10 +156,10 @@ export const validRef = (ref) => ({
  * Whether the counter `today`, read at `now`, is the day before shown again,
  * to keep out of the index (as a counter not read: its time is not moved):
  * - at sunrise (a later local day than the last value taken), a value within
- *   [last - 5 Wh, last + 0.1 kWh] (the inverter may count a little after our
+ *   [last - 0.1 kWh, last + 0.1 kWh] (the inverter may count a little after our
  *   last read): it is noted in `ref.staleSeen`;
  * - later the same local day as a new day, a value back within
- *   [day before - 5 Wh, day before + 0.1 kWh] while today's counter taken is
+ *   [day before - 0.1 kWh, day before + 0.1 kWh] while today's counter taken is
  *   still under the day before - 0.1 kWh (a reboot that shows it again).
  * Pure but for `ref.staleSeen`. Returns 'sunrise', 'again' or undefined.
  */
@@ -581,8 +582,9 @@ export class ZeverApp {
     this.info = info;
     this.inverters = reading.inverters;
     this.outcome = { at: mono, kind: 'reading', reading };
-    if (power !== undefined) {
-      this.peaks = withPeak(this.peaks, localParts(this.now(), TIME_ZONE).date, power);
+    const peak = this.plausiblePeak(power);
+    if (peak !== undefined) {
+      this.peaks = withPeak(this.peaks, localParts(this.now(), TIME_ZONE).date, peak);
     }
     const session = this.session;
     if (infoChanged || !session.discovered) {
@@ -817,6 +819,35 @@ export class ZeverApp {
   }
 
   // --- Values ------------------------------------------------------------------------
+
+  /**
+   * The power of a reading as a peak to learn, or undefined (review 2, m1):
+   * above 1.5 x the typed peak power, never; above 1.5 x the highest of the
+   * last 30 days (once 7 are known), only when seen twice in a row (then the
+   * lower of the two). A value of error (65535 W) never widens the margin.
+   */
+  plausiblePeak(power) {
+    if (power === undefined) {
+      return undefined;
+    }
+    const previous = this.outlierPower;
+    this.outlierPower = undefined;
+    if (finite(this.config.peakKw)) {
+      return power > PEAK_OUTLIER * this.config.peakKw * 1000 ? undefined : power;
+    }
+    if (this.peaks.length < PEAK_DAYS_MIN) {
+      return power;
+    }
+    const top = PEAK_OUTLIER * Math.max(...this.peaks.map((p) => p.w));
+    if (power <= top) {
+      return power;
+    }
+    if (previous !== undefined) {
+      return Math.min(previous, power);
+    }
+    this.outlierPower = power;
+    return undefined;
+  }
 
   /** The margin of the index now (kW): typed peak power, else learned (I3). */
   maxKw() {

@@ -73,7 +73,7 @@ test/                             node --test, against the SDK's fake Gladys, a 
   shown again is kept out by `keptOut` in `src/app.js` (its marks in /data,
   review 1 B1/I1); both use the installation's `maxKw` (peak power typed,
   else learned, 2 to 30 kW, I3). Risk left, documented: a day before shown
-  more than 0.1 kWh above the last value read, or a wrong reading within
+  more than 0.1 kWh from the last value read (above or below), or a wrong reading within
   `maxKw` since the last read. Never published at night. `energy_today` stays
   the inverter's counter (`daily-production`), not sent when kept out: never
   an index, never `publishEnergyConsumption`. Do not change `src/daily.js` or

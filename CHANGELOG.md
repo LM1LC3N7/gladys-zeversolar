@@ -38,7 +38,7 @@ the notes of the version's GitHub Release.
   index, the same for the daily index and the guard; learned from the power
   read over a week when empty (2 to 30 kW).
 - The counter of the day before shown again (at sunrise, or after a restart
-  during the day, up to 0.1 kWh above the last value read) is kept out of the
+  during the day, within 0.1 kWh of the last value read, above or below) is kept out of the
   index and of the energy of the day; its marks are kept in `/data`.
 - A drop of the built index is never accepted: it corrects itself.
 - A Wi-Fi board answering without its inverter right after production, or

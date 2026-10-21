@@ -62,9 +62,10 @@
 // a real cut across midnight. That makes the "risk left" above a daily one
 // here (every sunrise is a cut, the undo after a gap never applies): the app
 // keeps the day before shown again out of this index (src/app.js `keptOut`:
-// within 0.1 kWh of the last value taken at sunrise, or of the value of the
+// within 0.1 kWh (above or below) of the last value taken at sunrise, or of the value of the
 // day before later that same day, both kept in /data), review 1 B1 and I1.
-// Left: a day before shown more than 0.1 kWh above the last value read, or a
+// Left: a day before shown more than 0.1 kWh from the last value read (above
+// or below, review 2), or a
 // wrong reading within the installation's margin (the app's `maxKw`).
 //
 // Whatever comes out still passes the IndexGuard, which holds any jump or

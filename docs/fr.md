@@ -38,7 +38,9 @@ marche/arrêt, pas de limite de puissance).
    (kWc, sur la facture de l'installateur). Elle borne ce que l'index
    d'énergie peut prendre entre deux lectures. Laissée vide, elle est apprise
    depuis la puissance atteinte par l'onduleur sur une semaine (30 kW d'ici
-   là, ce qui laisse passer plus de lectures aberrantes).
+   là, ce qui laisse passer plus de lectures aberrantes). Ne saisissez jamais
+   moins que la vraie puissance crête (une longue coupure à midi pourrait
+   alors faire perdre le reste de la journée) : dans le doute, laissez vide.
 
 Le bouton « Tester la connexion » lit l'onduleur si une lecture est due, sinon
 il donne la dernière lecture : l'intégration ne lit jamais plus d'une fois par
@@ -72,7 +74,7 @@ qui remet vraiment son compteur à zéro dans la journée, un compteur qui saute
 du changement de jour, une horloge mal réglée.
 
 Risque restant (il compterait trop) : une valeur de la veille réaffichée plus
-de 0,1 kWh au-dessus de la dernière valeur lue, ou toute lecture fausse qui
+de 0,1 kWh de la dernière valeur lue, au-dessus ou au-dessous, ou toute lecture fausse qui
 tient dans la puissance crête de l'installation depuis la dernière lecture.
 Saisir la puissance crête garde cette marge petite.
 

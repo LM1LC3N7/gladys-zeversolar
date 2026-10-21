@@ -35,7 +35,9 @@ no power limit).
 4. Optional but recommended: enter the peak power of your panels (kWp, on the
    installer's invoice). It bounds what the energy index may take between two
    reads. Left empty, it is learned from the power the inverter reaches over a
-   week (30 kW until then, which lets more odd readings through).
+   week (30 kW until then, which lets more odd readings through). Never enter
+   less than the real peak power (a long silence at noon could then lose the
+   rest of the day): in doubt, leave it empty.
 
 The "Test the connection" button reads the inverter if a read is due, and
 otherwise tells the last read: the integration never reads more than once a
@@ -68,7 +70,7 @@ the day, a counter that jumps (the rest of that day may then be lost), hours
 without reads around the change of day, a wall clock set wrong.
 
 Risk left (it would count too much): a value of the day before shown again
-more than 0.1 kWh above the last value read, or any wrong reading that fits
+more than 0.1 kWh from the last value read, above or below, or any wrong reading that fits
 within the peak power of the installation since the last read. Entering the
 peak power keeps that margin small.
 

@@ -54,8 +54,8 @@
         "fr": "Puissance crête de l'installation (kWc, facultatif)"
       },
       "description": {
-        "en": "The peak power of your panels (on the installer's invoice). It bounds what the energy index may take between two reads (an odd reading is held back instead). Empty: learned from the power the inverter reaches over a week (30 kW until then).",
-        "fr": "La puissance crête de vos panneaux (sur la facture de l'installateur). Elle borne ce que l'index d'énergie peut prendre entre deux lectures (une lecture aberrante est retenue). Vide : apprise depuis la puissance atteinte par l'onduleur sur une semaine (30 kW d'ici là)."
+        "en": "The peak power of your panels (on the installer's invoice). It bounds what the energy index may take between two reads (an odd reading is held back instead). Empty: learned from the power the inverter reaches over a week (30 kW until then). Never enter less than the real peak power: in doubt, leave it empty.",
+        "fr": "La puissance crête de vos panneaux (sur la facture de l'installateur). Elle borne ce que l'index d'énergie peut prendre entre deux lectures (une lecture aberrante est retenue). Vide : apprise depuis la puissance atteinte par l'onduleur sur une semaine (30 kW d'ici là). Ne saisissez jamais moins que la vraie puissance crête : dans le doute, laissez vide."
       },
       "placeholder": { "en": "e.g. 3", "fr": "ex. 3" }
     }

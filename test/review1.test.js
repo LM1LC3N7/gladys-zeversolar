@@ -313,3 +313,78 @@ test('M6: a new address of the same inverter reaches the Discovery list at its f
   const [device] = gladys.fake.discoveredDevices;
   assert.equal(device.params.find((p) => p.name === 'address').value, '192.168.1.61');
 });
+
+// --- Review 2 -----------------------------------------------------------------
+
+/** The day before shown `below` kWh UNDER the last value read, after a silence. */
+function silentThenBelow(days, { from, minutes, below }) {
+  const base = solarWorld(days);
+  const value = lastRead(days[0]) - below;
+  return (t) => {
+    if (t > from && t <= from + minutes * MINUTE) return 'timeout';
+    if (t > from + minutes * MINUTE && t <= from + (minutes + 15) * MINUTE) {
+      return { power: 700, energy: printed(value) };
+    }
+    return base(t);
+  };
+}
+
+test('R1: the day before 0.05 kWh under the last read, 3 kWp typed, silent 09:00-12:00', async () => {
+  const days = [solarDay(0, 9), solarDay(1, 6), solarDay(2, 8), solarDay(3, 8)];
+  const world = silentThenBelow(days, { from: P(1, 9), minutes: 180, below: 0.05 });
+  const result = await replay({
+    days,
+    world,
+    from: P(0, 10),
+    until: P(3, 20),
+    config: { ...CONFIG, peak_power_kw: 3 },
+  });
+  assert.ok(result.counted <= result.real + 0.02, `${result.counted} > ${result.real}`);
+});
+
+test('R1: the day before 0.05 kWh under the last read, first week without kWp, silent 12:00-12:35', async () => {
+  const days = [solarDay(0, 14.3), solarDay(1, 9.7), solarDay(2, 8), solarDay(3, 8)];
+  const world = silentThenBelow(days, { from: P(1, 12), minutes: 35, below: 0.05 });
+  const result = await replay({ days, world, from: P(0, 10), until: P(3, 20) });
+  assertClose(result, 0.25);
+});
+
+test('R1: a dawn in the undo window showing the day before 0.05 kWh under the last read', async () => {
+  for (const [label, kwh] of PROFILES) {
+    const days = daysOf(kwh);
+    const world = dawn(days, { gap: 10, value: lastRead(days[0]) - 0.05 });
+    assertClose(await replay({ days, world, from: P(0, 10), until: P(2, 20) }), 0.25, label);
+  }
+});
+
+test('m1: an aberrant power never widens the learned margin', async () => {
+  const peaks = Array.from({ length: 7 }, (_, i) => ({ day: `2026-10-1${i}`, w: 3000 }));
+  const inverter = createInverter(() => ({ power: 65535, energy: '5.00' }));
+  const store = createMemoryStore({ serial: SERIAL, peaks });
+  const { app, start, wait } = await setup({
+    devices: [created()],
+    store,
+    now: P(0, 12),
+    inverter,
+  });
+  await start();
+  assert.equal(app.maxKw(), 4.5, 'seen once: ignored');
+  inverter.world = () => ({ power: 2500, energy: '5.05' });
+  await wait(MINUTE);
+  inverter.world = () => ({ power: 65535, energy: '5.10' });
+  await wait(MINUTE);
+  assert.equal(app.maxKw(), 4.5, 'not twice in a row');
+  // Seen twice in a row: a real bigger installation, learned.
+  inverter.world = () => ({ power: 5000, energy: '5.20' });
+  await wait(MINUTE);
+  assert.equal(app.maxKw(), 7.5);
+  // With the peak power typed, anything above 1.5 x it is never a peak.
+  const typed = await setup({
+    devices: [created()],
+    now: P(0, 12),
+    inverter: createInverter(() => ({ power: 9000, energy: '5.00' })),
+    config: { ...CONFIG, peak_power_kw: 3 },
+  });
+  await typed.start();
+  assert.deepEqual(typed.store.data.peaks, []);
+});
