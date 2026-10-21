@@ -1,67 +1,88 @@
-# Template de démonstration
+# Zeversolar pour Gladys Assistant
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Connecteur non officiel, sans lien avec Zeversolar. Il lit votre onduleur
+solaire Zeversolar sur votre réseau local, par la page d'état de sa carte
+Wi-Fi, sans cloud et sans compte.
+
+**Jamais testé avec un vrai onduleur Zeversolar** : il a été construit à partir
+de la bibliothèque zeversolar (celle qu'utilise Home Assistant) et des
+exemples de sa documentation. Merci de signaler ce que vous voyez (voir
+« Retours » plus bas).
 
 ## Ce que vous obtenez
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+Un appareil Gladys par onduleur, nommé d'après son numéro de série :
 
-## Configuration
+| Fonction                          | Ce que c'est                                                                             |
+| --------------------------------- | ---------------------------------------------------------------------------------------- |
+| Production solaire (W)            | la puissance produite en ce moment ; 0 la nuit                                           |
+| Énergie solaire du jour (kWh)     | le compteur du jour de l'onduleur, tel qu'il le donne                                    |
+| Index de production solaire (kWh) | un index cumulé pour le suivi énergétique de Gladys (production par demi-heure, revenus) |
+| Onduleur éveillé                  | 1 quand l'onduleur produit ou est prêt, 0 en veille (la nuit)                            |
+| Défaut de l'onduleur              | 1 quand l'onduleur signale une erreur                                                    |
+| Liaison au cloud Zeversolar       | 1 quand la carte Wi-Fi est connectée au cloud du fabricant                               |
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+Lecture seule : l'intégration n'envoie jamais de commande à l'onduleur (pas de
+marche/arrêt, pas de limite de puissance).
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+## Mise en place
 
-## Actions
+1. Trouvez l'adresse IP de l'onduleur dans votre box (sa carte Wi-Fi y
+   apparaît comme un appareil du réseau). Donnez-lui si possible une adresse
+   fixe.
+2. Dans Gladys, ouvrez l'intégration, saisissez l'adresse (de jour : la nuit
+   l'onduleur dort et ne répond pas) et enregistrez.
+3. Ouvrez l'onglet « Découverte » et créez l'appareil. Ses valeurs arrivent à
+   la lecture suivante (dans la minute de jour).
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+Le bouton « Tester la connexion » lit l'onduleur si une lecture est due, sinon
+il donne la dernière lecture : l'intégration ne lit jamais plus d'une fois par
+minute, quoi qui le demande.
 
-## Scènes
+## La nuit
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+Un onduleur Zeversolar est alimenté par ses panneaux : au coucher du soleil il
+s'arrête, et sa carte Wi-Fi répond sans production ou se tait. Ce n'est pas une
+erreur : après trois lectures sans réponse (ou tout de suite quand la carte le
+dit), l'onduleur est « en veille », sa puissance passe à 0, l'état reste vert
+et le dit, et il est lu toutes les 5 minutes jusqu'à son réveil. L'état ne
+passe au rouge que si l'onduleur disparaît en pleine production, répond autre
+chose que sa page d'état, ou ne donne aucune lecture pendant plus d'un jour.
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+## L'index d'énergie
 
-## Tableau de bord
+L'onduleur ne donne qu'un compteur du jour (il repart chaque matin), jamais un
+compteur depuis sa mise en service, alors que le suivi énergétique de Gladys
+compte les hausses d'un index cumulé. L'intégration en construit donc un :
+l'index repart de sa dernière valeur et ajoute ce que le compteur du jour
+ajoute. Il ne repasse jamais à 0 et ne baisse jamais : un nouveau jour (le
+compteur revenu à 0 le matin) le laisse où il était. Tout doute compte moins,
+jamais plus : un redémarrage de l'onduleur dans la journée, un compteur qui
+saute, des heures sans lecture autour du changement de jour.
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+L'index passe aussi par une garde : un saut ou une baisse de l'index lui-même
+est retenu, affiché dans l'état de l'intégration, et pris seulement quand vous
+cliquez sur « Accepter l'index retenu » dans la configuration (un saut est
+alors compté d'un coup, une baisse ne compte rien). Enregistrer la
+configuration ne l'accepte jamais.
 
-## Dépannage
+## Limites
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- Seul le premier onduleur est lu quand la carte Wi-Fi en signale plusieurs.
+- L'énergie du jour est lue comme la bibliothèque la lit : un seul chiffre
+  après la virgule est un zéro manquant (« 14.9 » veut dire 14,09 kWh).
+- L'intégration demande Gladys 5.2.0 ou plus récent.
+
+## Vie privée
+
+Rien ne sort de votre réseau : l'intégration ne parle qu'à l'adresse saisie,
+avec une petite requête GET par minute (toutes les 5 minutes la nuit). La clé
+d'enregistrement de la carte Wi-Fi (sa clé pour le cloud du fabricant) n'est
+jamais gardée, journalisée ni affichée.
+
+## Retours
+
+Tickets et contributions : <https://github.com/LM1LC3N7/gladys-zeversolar>. Si
+vous avez un onduleur Zeversolar, le texte de `http://<adresse>/home.cgi` (de
+jour et de nuit, clé d'enregistrement et numéros de série masqués) aide
+beaucoup.

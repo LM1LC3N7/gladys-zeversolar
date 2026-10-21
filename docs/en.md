@@ -1,61 +1,84 @@
-# Demo Devices Template
+# Zeversolar for Gladys Assistant
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+Unofficial connector, not affiliated with Zeversolar. It reads your Zeversolar
+solar inverter on your home network, through the status page of its Wi-Fi
+board, without any cloud and without any account.
+
+**Never tested with a real Zeversolar inverter**: it was built from the
+zeversolar library (the one Home Assistant uses) and the examples of its
+documentation. Please report what you see (see "Feedback" below).
 
 ## What you get
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+One Gladys device per inverter, named after its serial number:
 
-## Configuration
+| Feature                       | What it is                                                                              |
+| ----------------------------- | --------------------------------------------------------------------------------------- |
+| Solar production (W)          | the power the inverter produces now; 0 at night                                         |
+| Solar energy of the day (kWh) | the counter of the day of the inverter, as it gives it                                  |
+| Solar production index (kWh)  | a cumulative index for the Gladys energy monitoring (production per half hour, revenue) |
+| Inverter awake                | 1 while the inverter produces or is ready, 0 asleep (the night)                         |
+| Inverter fault                | 1 when the inverter reports an error                                                    |
+| Link to the Zeversolar cloud  | 1 when the Wi-Fi board is connected to the maker's cloud                                |
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-   The **refresh interval** sets how often the weather station and the
-   plug's power are read: every 5 minutes by default, every minute at most.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+Read-only: the integration never sends a command to the inverter (no on/off,
+no power limit).
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+## Setting it up
 
-## Actions
+1. Find the IP address of the inverter in your router (its Wi-Fi board shows
+   up as a device of your network). Give it a fixed address if you can.
+2. In Gladys, open the integration, enter the address (by day: at night the
+   inverter sleeps and does not answer), and save.
+3. Open the "Discover" tab and create the device. Its values come at the next
+   read (within a minute by day).
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+The "Test the connection" button reads the inverter if a read is due, and
+otherwise tells the last read: the integration never reads more than once a
+minute, whatever asks.
 
-## Scenes
+## The night
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+A Zeversolar inverter is powered by its panels: at sunset it stops, and its
+Wi-Fi board either answers without production or goes silent. That is not an
+error: after three silent reads (or at once when the board says so), the
+inverter is "asleep", its power goes to 0, the status stays green and says so,
+and it is read every 5 minutes until it wakes up. The status turns red only if
+the inverter vanishes while producing, answers something that is not its
+status page, or gives no reading for more than a day.
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+## The energy index
 
-## Dashboard
+The inverter only gives a counter of the day (it starts again every morning),
+never a lifetime counter, while the Gladys energy monitoring counts the rises
+of a cumulative index. So the integration builds one: the index goes on from
+its last value and adds what the counter of the day adds. It never goes back
+to 0 and never drops: a new day (the counter back to 0 in the morning) leaves
+it where it was. Any doubt counts less, never more: a reboot of the inverter
+during the day, a counter that jumps, hours without reads around the change of
+day.
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+The index also goes through a guard: a jump or a drop of the index itself is
+held back, shown in the integration status, and only taken when you click
+"Accept the held index" in the configuration (a jump is then counted at once,
+a drop counts nothing). Saving the configuration never accepts it.
 
-## Troubleshooting
+## Limits
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- Only the first inverter is read when the Wi-Fi board reports several.
+- The energy of the day comes as the library reads it: one decimal digit is
+  a missing zero ("14.9" means 14.09 kWh).
+- The integration needs Gladys 5.2.0 or later.
+
+## Privacy
+
+Nothing leaves your network: the integration only talks to the address you
+entered, with one small GET a minute (every 5 minutes at night). The registry
+key of the Wi-Fi board (its key for the maker's cloud) is never kept, logged
+or shown.
+
+## Feedback
+
+Issues and pull requests: <https://github.com/LM1LC3N7/gladys-zeversolar>. If
+you own a Zeversolar inverter, the text of `http://<address>/home.cgi` (by day
+and at night, with the registry key and serial numbers hidden) helps a lot.

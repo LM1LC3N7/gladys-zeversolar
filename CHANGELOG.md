@@ -12,44 +12,26 @@ the notes of the version's GitHub Release.
 
 ### Added
 
-- A working example of scene triggers, scene actions and dashboard widgets
-  (Gladys 5.1.0 or later).
-- `CHANGELOG.md`, rolled by the Release workflow.
-- A GitHub Release for every version, with its changelog section as notes: the
-  Gladys Supervision page links each version to the repository's releases.
-- CI runs the tests on Node 22 and 24, and builds the Docker image.
-- Dependabot keeps the npm dependencies and the GitHub Actions up to date.
-- `SECURITY.md` (how to report a vulnerability) and `CLAUDE.md` (project rules
-  for contributors and coding assistants).
-- Manifest tests: `version` matches `package.json`, `docker_image` is tagged
-  with it, descriptions hold 10 to 100 characters, placeholders are
-  multi-language objects.
-- The latitude and longitude fields show an example value as placeholder.
+- Local reading of Zeversolar solar inverters through the status page of their
+  Wi-Fi board (`/home.cgi`), as the zeversolar library does: no cloud, no
+  account, one GET a minute (every 5 minutes at night), never faster whatever
+  asks (reconnection, save, test button, Discover tab, restart: the time of
+  the last read is kept in `/data`).
+- One device per inverter (`inverter:<serial>`): solar power, energy of the
+  day, inverter awake, inverter fault, link to the maker's cloud.
+- A solar production index for the Gladys energy monitoring, built from the
+  counter of the day (a new day never drops it, any doubt counts less) and
+  checked by the guard of gladys-p1-monitor: never 0, a jump or a drop held
+  back and taken only by the "Accept the held index" button; its 30-minute
+  production declared with stable ids.
+- The night: three silent reads (or a Wi-Fi board answering without inverter)
+  and the inverter is asleep: power 0, green status, no index; red only for
+  an inverter that vanishes while producing, a wrong answer, or a day of
+  silence. A stale counter of the day before at sunrise is kept out of the
+  index.
+- 429 and 5xx: a bounded pause (1 min to 6 h) kept in `/data`. Answers bounded
+  to 4 KiB and 10 s, no redirect followed, every field checked.
+- Read-only: none of the library's commands (on/off, power limit) is ported.
+- Guides in English and French, cover image, third-party notices in the image.
 
-### Changed
-
-- Node.js 22 or later is required (Node 20 is end-of-life).
-- Integration SDK 0.15.0. The tests now run against the fake Gladys of the
-  SDK, which refuses the payloads Gladys refuses.
-- The refresh interval is one minute minimum, the fastest Gladys polls a
-  device. The plug's power is only sent when it changes, and every 30
-  minutes otherwise.
-
-### Fixed
-
-- Gladys refused the devices of the Discovery tab: the weather station and
-  the plug declared their poll frequency in seconds instead of one of the
-  values Gladys accepts, and were never polled. They now poll every minute,
-  and the readings follow the refresh interval of the configuration.
-
-- The release commit no longer fails `npm run format:check`: the Release
-  workflow updates the manifest `version` and `docker_image` in place instead
-  of re-printing the whole file with `jq`.
-- The integration can write to `/data`: the image creates the directory owned
-  by the `node` user, a new Docker volume was owned by root.
-- A sub-container running the integration's own image follows it to the new
-  tag at each release, as well as in the manifest of the build summary: it kept
-  the previous tag, which may not exist on the registry. Sub-containers on a
-  third-party image (a broker, a database...) keep theirs.
-
-[Unreleased]: https://github.com/GladysAssistant/integration-template-js/commits/main
+[Unreleased]: https://github.com/LM1LC3N7/gladys-zeversolar/commits/main
