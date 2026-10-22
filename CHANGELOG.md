@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-22
+
 ### Fixed
 
 - Small days (snow, a dark winter day ending at 0.1 kWh or less) are no
@@ -79,7 +81,8 @@ the notes of the version's GitHub Release.
 - A new address of the same inverter reaches the Discovery list at its first
   reading.
 
-[Unreleased]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/LM1LC3N7/gladys-zeversolar/releases/tag/v0.1.1
