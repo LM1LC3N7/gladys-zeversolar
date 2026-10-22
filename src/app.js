@@ -183,7 +183,9 @@ export function keptOut(daily, ref, today, now) {
   const before = ref.dayBefore;
   if (
     before &&
-    before.day === day &&
+    // The mark is dated by the night it starts (noteNewDay): a reset read
+    // before our midnight (the inverter's clock ahead) is the next day's.
+    (before.day === day || before.day === daily.window(now).key) &&
     s.today < before.value - STALE_BAND_KWH &&
     today >= before.value - STALE_BELOW_KWH &&
     today <= before.value + STALE_BAND_KWH
@@ -199,7 +201,10 @@ export function noteNewDay(daily, ref, now) {
   if (!s?.undo || s.undo.at !== now) {
     return;
   }
-  const day = daily.local(now).date;
+  // The date of the night after its midnight (0.1.3): a reset read from 23:00
+  // to 23:59 (an inverter whose midnight comes before ours) dates the day it
+  // starts, not the one that ends, as in gladys-imeon.
+  const day = daily.window(now).key;
   const seen = ref.staleSeen?.day === day ? ref.staleSeen.value : 0;
   ref.dayBefore = { day, value: Math.max(s.undo.prevToday, seen) };
 }

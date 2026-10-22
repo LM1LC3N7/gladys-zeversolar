@@ -41,6 +41,15 @@
       the same local day and is refused (Helsinki scenario 84.08 -> 28.71,
       less). Option to weigh, in src/daily.js and gladys-imeon alike: a new
       day after a sleep of at least an hour on the monotonic clock.
+      In the same domain, fixed in 0.1.3 (the gladys-imeon 0.1.2 "early
+      midnight" defect): a reset read from 23:00 to 23:59 container time
+      (midnight sun with the inverter's clock 20 or 55 min ahead, or a house
+      5 to 7 h east of Gladys' time zone) dated the mark of the day before by
+      the day that ends, so the day before shown again the next day was
+      counted (+15.8 and +9.1 kWh in the first week without kWp). The mark
+      is now dated by `daily.window(now).key` (the night it starts) and the
+      "again" branch of `keptOut` accepts that key too
+      (test/earlyMidnight.*.test.js).
 - [ ] Wall clock set wrong (review 1, M5: +1 day at 17:00, -1 day at night,
       +12 h at 13:00): a day lost each time (less), the approved gladys-imeon
       behaviour, for the record.

@@ -10,6 +10,13 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Fixed
+
+- An inverter whose midnight comes before the container's (midnight sun with
+  its clock ahead, or a house several hours east of Gladys' time zone): the
+  counter of the day before shown again the next day is no longer counted
+  in the energy index (its mark is dated by the day the reset starts).
+
 ## [0.1.2] - 2026-10-22
 
 ### Fixed
