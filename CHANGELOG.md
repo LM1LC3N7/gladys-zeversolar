@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-22
+
 ### Fixed
 
 - An inverter whose midnight comes before the container's (midnight sun with
@@ -67,6 +69,7 @@ the notes of the version's GitHub Release.
 - A new address of the same inverter reaches the Discovery list at its first
   reading.
 
-[Unreleased]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/LM1LC3N7/gladys-zeversolar/releases/tag/v0.1.1
