@@ -33,10 +33,10 @@ function* texts(node, path = '') {
   }
 }
 
-test('the store basics; version 0.1.0 everywhere', () => {
+test('the store basics; one version everywhere (the Release workflow owns it)', () => {
   assert.equal(manifest.manifest_version, 1);
   assert.equal(manifest.type, 'device');
-  assert.equal(manifest.version, '0.1.0');
+  assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
   assert.equal(manifest.docker_image, `ghcr.io/lm1lc3n7/gladys-zeversolar:${manifest.version}`);
   assert.equal(manifest.version, pkg.version);
   assert.equal(lock.version, pkg.version);

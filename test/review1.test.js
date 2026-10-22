@@ -374,8 +374,12 @@ test('m1: an aberrant power never widens the learned margin', async () => {
   inverter.world = () => ({ power: 65535, energy: '5.10' });
   await wait(MINUTE);
   assert.equal(app.maxKw(), 4.5, 'not twice in a row');
-  // Seen twice in a row: a real bigger installation, learned.
+  // A plausible power seen twice in a row: a real bigger installation, learned
+  // (65535 W just before never counts as the first of the two, 0.1.2 n2).
   inverter.world = () => ({ power: 5000, energy: '5.20' });
+  await wait(MINUTE);
+  assert.equal(app.maxKw(), 4.5);
+  inverter.world = () => ({ power: 5200, energy: '5.30' });
   await wait(MINUTE);
   assert.equal(app.maxKw(), 7.5);
   // With the peak power typed, anything above 1.5 x it is never a peak.
@@ -387,4 +391,79 @@ test('m1: an aberrant power never widens the learned margin', async () => {
   });
   await typed.start();
   assert.deepEqual(typed.store.data.peaks, []);
+});
+
+// --- 0.1.2 (review 3, n1 and n2) ---------------------------------------------------
+
+const dullMonth = (n, w) =>
+  createMemoryStore({
+    serial: SERIAL,
+    peaks: Array.from({ length: n }, (_, i) => ({
+      day: `2026-10-${String(19 - i).padStart(2, '0')}`,
+      w,
+    })),
+  });
+
+test('n1: an outage that ends in full sun after a dull month no longer loses the day', async () => {
+  const days = [solarDay(0, 33), solarDay(1, 33), solarDay(2, 31)];
+  const base = solarWorld(days);
+  const world = (t) => (t > P(0, 8, 30) && t <= P(0, 11, 30) ? 'timeout' : base(t));
+  const result = await replay({
+    days,
+    world,
+    from: P(0, 7),
+    until: P(2, 20),
+    store: dullMonth(7, 1300),
+  });
+  assertClose(result, 0.4, 'learned 1.3 kW, no kWp');
+  // The power of that read was not recorded as a peak: the peak grew with the
+  // following reads only (each within 1.5 x the one before).
+  assert.ok(result.app.maxKw() <= 30);
+});
+
+test('n1: the widened margin of one read never counts a wrong counter with a sane power', async () => {
+  const days = [solarDay(0, 14)];
+  const base = solarWorld(days);
+  // 30 min silent, then ONE read +12 kWh with the power of the moment (1.3 kW learned).
+  const world = (t) => {
+    if (t > P(0, 13) && t <= P(0, 13, 30)) return 'timeout';
+    if (t > P(0, 13, 30) && t <= P(0, 13, 31)) {
+      return { power: days[0].power(t), energy: printed(days[0].today(t) + 12) };
+    }
+    return base(t);
+  };
+  const result = await replay({
+    days,
+    world,
+    from: P(0, 10),
+    until: P(0, 20),
+    store: dullMonth(7, 2500),
+  });
+  assert.ok(result.counted <= result.real + 0.02, `${result.counted} > ${result.real}`);
+});
+
+test('n2: 65535 W is never a peak nor a margin, even twice in a row or in the first week', async () => {
+  for (const [label, store] of [
+    ['7 days known', dullMonth(7, 4500)],
+    ['first week', dullMonth(3, 4500)],
+  ]) {
+    const inverter = createInverter(() => ({ power: 65535, energy: '5.00' }));
+    const { app, start, wait } = await setup({
+      devices: [created()],
+      store,
+      now: P(0, 12),
+      inverter,
+    });
+    await start();
+    inverter.world = () => ({ power: 65535, energy: '5.05' });
+    await wait(MINUTE);
+    assert.ok(!app.peaks.some((p) => p.w > 25_000), label);
+    assert.equal(app.readMaxKw(65535), app.maxKw(), label);
+  }
+  // A Zeversolar inverter of 20 kW is still learned.
+  const big = dullMonth(7, 15_000);
+  const inverter = createInverter(() => ({ power: 20_000, energy: '5.00' }));
+  const { app, start } = await setup({ devices: [created()], store: big, now: P(0, 12), inverter });
+  await start();
+  assert.equal(app.readMaxKw(20_000), 30);
 });

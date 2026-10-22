@@ -10,6 +10,16 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Fixed
+
+- Without a peak power typed, an outage that ends in full sun no longer loses
+  the rest of the day: the power of that first reading (when plausible)
+  widens the margin of the energy index for that reading only, without
+  becoming a learned peak.
+- An aberrant power (65535 W, or above 25 kW, beyond any Zeversolar model)
+  never becomes the learned peak, even seen twice in a row or during the
+  first week.
+
 ## [0.1.1] - 2026-10-21
 
 ### Added

@@ -79,6 +79,12 @@ export const STALE_BAND_KWH = 0.1;
 export const STALE_BELOW_KWH = STALE_BAND_KWH;
 /** A power above this many times the peak (typed, or of the last 30 days) is a glitch unless seen twice in a row. */
 export const PEAK_OUTLIER = 1.5;
+/**
+ * The largest Zeversolar inverters are 20 kW: a power above this (W), 65535
+ * (a common error value) included, is aberrant: never a peak, never in the
+ * margin of a read, even seen twice or in the first week (0.1.2, n2).
+ */
+export const PLAUSIBLE_POWER_MAX = 25_000;
 /** kWh always accepted on top of INDEX_MAX_KW x hours (rounding, a late read). */
 export const INDEX_SLACK_KWH = 0.5;
 /** A counter of the day back to at most this (kWh) may be a new day. */

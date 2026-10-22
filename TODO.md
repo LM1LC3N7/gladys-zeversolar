@@ -91,7 +91,13 @@
     to a bigger inverter widens the margin of the first one; to do later:
     keep them per serial). A power above 1.5 x the typed peak power is never
     a peak; above 1.5 x the highest of the last 30 days, only when seen
-    twice in a row (review 2, m1: a 65535 W error value). Note: after a
+    twice in a row (review 2, m1: a 65535 W error value); above 25 kW
+    (`PLAUSIBLE_POWER_MAX`, the largest model is 20 kW), never, even twice
+    or in the first week (0.1.2, n2). Without a typed peak power, a
+    plausible power above the margin widens it for THAT read only, never
+    recorded (0.1.2, n1: an outage ending in full sun after a dull month,
+    97 kWh real were counted 64.6, now 96.9); counting too much then needs a
+    wrong counter AND a wrong power in the same answer. Note: after a
     jump, `src/daily.js` takes nothing more that day (the margin then runs
     from each refused read): the rest of the day is lost (less);
   - the counter drops at sunrise, after a night without reads: the "earlier

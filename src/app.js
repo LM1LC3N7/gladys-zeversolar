@@ -43,6 +43,7 @@ import {
   PEAK_DAYS_KEPT,
   PEAK_DAYS_MIN,
   PEAK_OUTLIER,
+  PLAUSIBLE_POWER_MAX,
   POLL_INTERVAL,
   POWER_MAX,
   RETRY_MAX,
@@ -827,11 +828,13 @@ export class ZeverApp {
    * lower of the two). A value of error (65535 W) never widens the margin.
    */
   plausiblePeak(power) {
-    if (power === undefined) {
-      return undefined;
-    }
     const previous = this.outlierPower;
     this.outlierPower = undefined;
+    if (power === undefined || power > PLAUSIBLE_POWER_MAX) {
+      // Aberrant (65535 W, above any Zeversolar model): never a peak, even
+      // seen twice or in the first week (0.1.2, n2).
+      return undefined;
+    }
     if (finite(this.config.peakKw)) {
       return power > PEAK_OUTLIER * this.config.peakKw * 1000 ? undefined : power;
     }
@@ -847,6 +850,20 @@ export class ZeverApp {
     }
     this.outlierPower = power;
     return undefined;
+  }
+
+  /**
+   * The margin of one read (kW): the installation's, widened to 1.5 x the
+   * power of that read when it is above it, plausible and no peak power is
+   * typed (0.1.2, n1). Counting too much then needs a wrong counter AND a
+   * wrong power in the same answer.
+   */
+  readMaxKw(power) {
+    const kw = this.maxKw();
+    if (finite(this.config.peakKw) || !finite(power) || power < 0 || power > PLAUSIBLE_POWER_MAX) {
+      return kw;
+    }
+    return Math.max(kw, clampKw((PEAK_OUTLIER * power) / 1000));
   }
 
   /** The margin of the index now (kW): typed peak power, else learned (I3). */
@@ -909,13 +926,30 @@ export class ZeverApp {
       const mono = this.monotonic();
       const previous = this.counterReadAt.get(id);
       this.counterReadAt.set(id, mono);
-      const built = daily.read(today, now, guard.last ?? lastValueOf(created, id), {
-        elapsedMs: previous === undefined ? undefined : mono - previous,
-      });
-      noteNewDay(daily, ref, now);
-      const total = built === undefined ? undefined : round(built, 3);
+      // The margin of THIS read only (0.1.2, n1): a plausible power above the
+      // learned peak (the first read after an outage that ends in full sun)
+      // widens it for this read, never recorded as a peak. Restored at once
+      // (no await in between): the shared classes keep their own code.
+      const kw = this.maxKw();
+      const readKw = this.readMaxKw(reading.power);
+      daily.limits.maxKw = readKw;
+      guard.maxKw = readKw;
+      let built;
+      let plausible;
+      try {
+        built = daily.read(today, now, guard.last ?? lastValueOf(created, id), {
+          elapsedMs: previous === undefined ? undefined : mono - previous,
+        });
+        noteNewDay(daily, ref, now);
+        const total = built === undefined ? undefined : round(built, 3);
+        built = total;
+        plausible = total !== undefined && guard.accept(total, now);
+      } finally {
+        daily.limits.maxKw = kw;
+        guard.maxKw = kw;
+      }
+      const total = built;
       this.noIndex = total === undefined;
-      const plausible = total !== undefined && guard.accept(total, now);
       if (total !== undefined && !plausible && guard.held) {
         this.logger.warn(
           `Zeversolar production index ${guard.held.direction === 'down' ? 'drop' : 'jump'} held back: the "Accept the held index" button takes it`,
