@@ -15,7 +15,10 @@ the notes of the version's GitHub Release.
 - Small days (snow, a dark winter day ending at 0.1 kWh or less) are no
   longer lost one after the other: a fresh counter at sunrise under half of
   the day before is the new day, not "the day before shown again" (the
-  status no longer says so every morning).
+  status no longer says so every morning). A slow rise of today's counter
+  through the level of the day before is never kept out either: small days
+  of 0.1 to 0.2 kWh and days ending close to the day before lose nothing
+  more than their first value.
 
 ## [0.1.3] - 2026-10-22
 

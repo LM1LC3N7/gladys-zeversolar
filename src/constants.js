@@ -71,9 +71,10 @@ export const PEAK_DAYS_KEPT = 30;
  * The counter of the day before (B1, I1): a read within this band of it,
  * above OR below (review 2, R1: an inverter that saves its counter now and
  * then shows a value a little under our last read), at sunrise, or back on it
- * later the same day while today's counter is well below it, is the day
- * before shown again: kept out. Cost: up to 0.1 kWh at the end of a day that
- * ends within 0.1 kWh of the day before.
+ * later the same day as a jump (more than the band) from today's counter
+ * taken while it is well below it, is the day before shown again: kept out.
+ * A slow rise of today's counter through the band is never kept out (0.1.4
+ * review, R1): no cost on days that end close to the day before.
  */
 export const STALE_BAND_KWH = 0.1;
 export const STALE_BELOW_KWH = STALE_BAND_KWH;

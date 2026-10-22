@@ -118,12 +118,15 @@
 value of the day before, the highest stale value kept out at that
 sunrise) }`; (b) a read of that local day within [dayBefore - 0.1 kWh,
     dayBefore + 0.1 kWh] while the counter taken today is under dayBefore -
-    0.1 kWh is kept out (a reboot showing the day before again); (c) at
+    0.1 kWh AND is a jump of more than 0.1 kWh from it is kept out (a reboot
+    showing the day before again; a slow rise is never kept out: 0.1.4
+    review, R1, small days of 0.1-0.2 kWh were lost one day in two and
+    similar winter days cost up to 0.2 kWh a day); (c) at
     sunrise (a later local day than the last value taken), a read within
     [last - 0.1 kWh, last + 0.1 kWh] is kept out (`staleSeen`); (d) a read kept
     out moves nothing (not a counter read) and its `energy_today` is not sent
-    (M2). A slow pass of the real counter through the band costs nothing (it
-    is a rise, taken once above it). Replayed on the review scenarios (Z0 to
+    (M2). A slow pass of the real counter through the band is taken as it
+    rises: no band cost. Replayed on the review scenarios (Z0 to
     Z9, Z1e, Z3e, Z3s, Z6, Z6b): no excess left. Risk left, documented: a
     day before shown more than 0.1 kWh from the last value read (above or below; review 2, R1: the band below was 5 Wh, a day before 0.05 kWh under our last read counted up to +4.5 kWh), or a wrong
     reading within `maxKw` since the last read;
@@ -133,10 +136,13 @@ sunrise) }`; (b) a read of that local day within [dayBefore - 0.1 kWh,
     the reset was never seen and each small day was lost whole (7 small days
     real 3.58, counted 3.11). The sunrise branch now keeps out only a read
     of at least `max(last - 0.1, last / 2)`: a fresh counter under half of a
-    small day before is the new day. Risk left of the small days (as
-    gladys-imeon n3): the day before shown again while today's counter is
-    already within 0.1 kWh of it is counted, about 0.1 kWh at most
-    (two small days, +0.04 kWh in the review);
+    small day before is the new day. Risk left (as gladys-imeon n3): the
+    day before shown again less than 0.1 kWh above today's counter may be
+    taken: 0.1 kWh at most, given back that day unless it ends lower (two
+    small days, +0.04 kWh in the review). The second guard of gladys-imeon
+    46c6085 (`s.resetWindow !== daily.window(now).key` in the sunrise
+    branch) is applied too, to keep the same code (no measurable effect
+    here);
   - review 1, I2: a DROP of the built index is never accepted (it only
     happens when the daily index takes back values already published, or a
     /data older than Gladys; never a new meter): the status says it corrects

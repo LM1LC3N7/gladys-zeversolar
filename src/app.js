@@ -161,7 +161,8 @@ export const validRef = (ref) => ({
  *   last read): it is noted in `ref.staleSeen`;
  * - later the same local day as a new day, a value back within
  *   [day before - 0.1 kWh, day before + 0.1 kWh] while today's counter taken is
- *   still under the day before - 0.1 kWh (a reboot that shows it again).
+ *   still under the day before - 0.1 kWh, and only as a jump of more than
+ *   0.1 kWh from it (a reboot that shows it again; a slow rise is taken).
  * Pure but for `ref.staleSeen`. Returns 'sunrise', 'again' or undefined.
  */
 export function keptOut(daily, ref, today, now) {
@@ -173,6 +174,10 @@ export function keptOut(daily, ref, today, now) {
   if (
     s.readDay &&
     day > s.readDay &&
+    // Not when the new day of this night is already taken (an inverter whose
+    // midnight comes before ours reset at 23:xx): the counter is today's (as
+    // gladys-imeon 46c6085).
+    s.resetWindow !== daily.window(now).key &&
     // A small day before (0.1.4): a fresh counter under half of it is the
     // new day, never "the day before" (as gladys-imeon).
     today >= Math.max(s.today - STALE_BELOW_KWH, s.today / 2) &&
@@ -189,6 +194,10 @@ export function keptOut(daily, ref, today, now) {
     // before our midnight (the inverter's clock ahead) is the next day's.
     (before.day === day || before.day === daily.window(now).key) &&
     s.today < before.value - STALE_BAND_KWH &&
+    // Only a jump from the counter taken (a reboot after a silence shows the
+    // day before at once), never a slow rise of today's counter through the
+    // band (0.1.4 review, R1: small days and similar days were lost).
+    today - s.today > STALE_BAND_KWH &&
     today >= before.value - STALE_BELOW_KWH &&
     today <= before.value + STALE_BAND_KWH
   ) {

@@ -145,10 +145,11 @@ test('the marks: a sunrise band, the day before remembered, a slow pass through 
   assert.deepEqual(ref.dayBefore, { day: '2026-10-22', value: 10.05 });
   // Later that day, the day before again while today's counter is low: kept out.
   assert.equal(keptOut(daily, ref, 10.06, P(1, 12)), 'again');
-  // The real counter passing slowly through that level: kept out within the
-  // band only, then taken from the last value taken (nothing lost: a rise).
+  // The real counter passing slowly through that level: a slow rise from the
+  // counter taken is never kept out (0.1.4 review, R1); a jump into the band is.
   assert.equal(daily.read(9.9, P(1, 15)) !== undefined, true);
-  assert.equal(keptOut(daily, ref, 10.05, P(1, 15, 1)), 'again');
+  assert.equal(keptOut(daily, ref, 9.98, P(1, 15, 1)), undefined, 'a slow rise: taken');
+  assert.equal(keptOut(daily, ref, 10.05, P(1, 15, 1)), 'again', 'a jump of 0.15: kept out');
   assert.equal(keptOut(daily, ref, 10.16, P(1, 15, 2)), undefined);
   assert.equal(daily.read(10.16, P(1, 15, 2)), daily.state().offset + 10.16);
   assert.equal(keptOut(daily, ref, 10.1, P(1, 15, 3)), undefined, 'today is no longer under it');
@@ -504,4 +505,44 @@ test('a week of small days (the board answers 6 min after waking up): counted, n
   assert.ok(result.counted <= real + 0.02, `counted ${result.counted} > real ${real}`);
   // Each day loses at most its first value (the rule of src/daily.js), never the day.
   assert.ok(result.counted >= real - 7 * 0.03, `counted ${result.counted} << real ${real}`);
+});
+
+// --- 0.1.4 review: slow rises never kept out ---------------------------------------
+
+test('a week of 0.15 kWh days spread over 8 h: counted, never more, no day lost', async () => {
+  const rise = (d) => P(d, 8.5);
+  const set = (d) => P(d, 16.5);
+  const exact = (d, t) => {
+    const x = Math.min(1, Math.max(0, (t - rise(d)) / (set(d) - rise(d))));
+    return (0.15 * (1 - Math.cos(Math.PI * x))) / 2;
+  };
+  const days = Array.from({ length: 7 }, (_, d) => d);
+  const world = (t) => {
+    const d = days.find((dd) => t >= P(dd, 0) && t < P(dd + 1, 0));
+    if (d === undefined || t < rise(d) + 6 * MINUTE || t >= set(d)) return 'timeout';
+    return { power: 30, energy: printed(Math.floor(exact(d, t) * 100 + 1e-9) / 100) };
+  };
+  const from = P(0, 7);
+  const until = P(6, 20);
+  const result = await replay({ days: [], world, from, until });
+  const real = days.reduce((sum, d) => sum + exact(d, until) - exact(d, from), 0);
+  assert.ok(result.counted <= real + 0.02, `counted ${result.counted} > real ${real}`);
+  // At most the first value of each day (0.01) and the rounding.
+  assert.ok(result.counted >= real - 7 * 0.025, `counted ${result.counted} << real ${real}`);
+});
+
+test('two 3 kWh days ending 0.05 kWh apart: nothing lost to the band', async () => {
+  const days = [solarDay(0, 3), solarDay(1, 3.05)];
+  const from = P(0, 7);
+  const until = P(1, 20);
+  const result = await replay({ days, world: solarWorld(days), from, until });
+  assert.ok(
+    result.counted <= result.real + 0.02,
+    `counted ${result.counted} > real ${result.real}`,
+  );
+  // Only the first value of the second day and the rounding (was up to 0.1-0.2 kWh).
+  assert.ok(
+    result.counted >= result.real - 0.04,
+    `counted ${result.counted} << real ${result.real}`,
+  );
 });
