@@ -173,7 +173,9 @@ export function keptOut(daily, ref, today, now) {
   if (
     s.readDay &&
     day > s.readDay &&
-    today >= s.today - STALE_BELOW_KWH &&
+    // A small day before (0.1.4): a fresh counter under half of it is the
+    // new day, never "the day before" (as gladys-imeon).
+    today >= Math.max(s.today - STALE_BELOW_KWH, s.today / 2) &&
     today <= s.today + STALE_BAND_KWH
   ) {
     const seen = ref.staleSeen?.day === day ? ref.staleSeen.value : 0;

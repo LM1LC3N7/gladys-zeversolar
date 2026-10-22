@@ -127,6 +127,16 @@ sunrise) }`; (b) a read of that local day within [dayBefore - 0.1 kWh,
     Z9, Z1e, Z3e, Z3s, Z6, Z6b): no excess left. Risk left, documented: a
     day before shown more than 0.1 kWh from the last value read (above or below; review 2, R1: the band below was 5 Wh, a day before 0.05 kWh under our last read counted up to +4.5 kWh), or a wrong
     reading within `maxKw` since the last read;
+  - 0.1.4 (the gladys-imeon 0.1.2 approval R1, `check-small-days`): after a
+    day ending at 0.1 kWh or less, the first read of the next morning (the
+    board answers a few minutes after waking up) fell in the sunrise band:
+    the reset was never seen and each small day was lost whole (7 small days
+    real 3.58, counted 3.11). The sunrise branch now keeps out only a read
+    of at least `max(last - 0.1, last / 2)`: a fresh counter under half of a
+    small day before is the new day. Risk left of the small days (as
+    gladys-imeon n3): the day before shown again while today's counter is
+    already within 0.1 kWh of it is counted, about 0.1 kWh at most
+    (two small days, +0.04 kWh in the review);
   - review 1, I2: a DROP of the built index is never accepted (it only
     happens when the daily index takes back values already published, or a
     /data older than Gladys; never a new meter): the status says it corrects

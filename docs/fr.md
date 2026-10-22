@@ -76,7 +76,10 @@ du changement de jour, une horloge mal réglée.
 Risque restant (il compterait trop) : une valeur de la veille réaffichée plus
 de 0,1 kWh de la dernière valeur lue, au-dessus ou au-dessous, ou toute lecture fausse qui
 tient dans la puissance crête de l'installation depuis la dernière lecture.
-Saisir la puissance crête garde cette marge petite.
+Saisir la puissance crête garde cette marge petite. Pour les très petites
+journées (neige, journée d'hiver sombre finie à 0,1 kWh ou moins), la veille
+réaffichée alors que le compteur du jour en est déjà proche peut être
+comptée : environ 0,1 kWh au plus.
 
 L'index passe aussi par une garde : un saut de l'index lui-même est retenu,
 affiché dans l'état de l'intégration, et pris seulement quand vous cliquez sur

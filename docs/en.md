@@ -72,7 +72,9 @@ without reads around the change of day, a wall clock set wrong.
 Risk left (it would count too much): a value of the day before shown again
 more than 0.1 kWh from the last value read, above or below, or any wrong reading that fits
 within the peak power of the installation since the last read. Entering the
-peak power keeps that margin small.
+peak power keeps that margin small. On very small days (snow, a dark winter
+day ending at 0.1 kWh or less), the day before shown again while today's
+counter is already close to it may be counted: about 0.1 kWh at most.
 
 The index also goes through a guard: a jump of the index itself is held back,
 shown in the integration status, and only taken when you click "Accept the

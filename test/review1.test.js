@@ -467,3 +467,41 @@ test('n2: 65535 W is never a peak nor a margin, even twice in a row or in the fi
   await start();
   assert.equal(app.readMaxKw(20_000), 30);
 });
+
+// --- 0.1.4: small days (the gladys-imeon 0.1.2 approval R1) ------------------------
+
+test('a small day before (0.06 kWh): a fresh 0.01 at sunrise is the new day, not kept out', () => {
+  const daily = new DailyIndex(null, { maxKw: 5 });
+  const ref = validRef(null);
+  daily.read(0.06, P(0, 16), { value: 1000 });
+  assert.equal(keptOut(daily, ref, 0.01, P(1, 8, 36)), undefined);
+  const built = daily.read(0.01, P(1, 8, 36), undefined, { elapsedMs: 16 * HOUR });
+  noteNewDay(daily, ref, P(1, 8, 36));
+  assert.equal(built, 1000, 'a new day: the index does not move');
+  assert.equal(daily.state().readDay, '2026-10-22');
+  // The day before itself, or within the band above its half, stays kept out.
+  const again = new DailyIndex(null, { maxKw: 5 });
+  again.read(0.06, P(0, 16), { value: 1000 });
+  assert.equal(keptOut(again, validRef(null), 0.06, P(1, 8, 36)), 'sunrise');
+  assert.equal(keptOut(again, validRef(null), 0.04, P(1, 8, 36)), 'sunrise');
+});
+
+test('a week of small days (the board answers 6 min after waking up): counted, never more', async () => {
+  // 150 W for the first 30 minutes of each day (0.075 kWh), 08:30 to 16:30.
+  const rise = (d) => P(d, 8.5);
+  const exact = (d, t) => Math.max(0, Math.min(t - rise(d), 30 * MINUTE)) * (0.15 / HOUR);
+  const days = Array.from({ length: 7 }, (_, d) => d);
+  const world = (t) => {
+    const d = days.find((dd) => t >= P(dd, 0) && t < P(dd + 1, 0));
+    if (d === undefined || t < rise(d) + 6 * MINUTE || t >= P(d, 16.5)) return 'timeout';
+    const power = t - rise(d) < 30 * MINUTE ? 150 : 0;
+    return { power, energy: printed(Math.floor(exact(d, t) * 100 + 1e-9) / 100) };
+  };
+  const from = P(0, 7);
+  const until = P(6, 20);
+  const result = await replay({ days: [], world, from, until });
+  const real = days.reduce((sum, d) => sum + exact(d, until) - exact(d, from), 0);
+  assert.ok(result.counted <= real + 0.02, `counted ${result.counted} > real ${real}`);
+  // Each day loses at most its first value (the rule of src/daily.js), never the day.
+  assert.ok(result.counted >= real - 7 * 0.03, `counted ${result.counted} << real ${real}`);
+});
