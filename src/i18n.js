@@ -9,7 +9,8 @@ const minutes = (ms) => Math.max(1, Math.round(ms / 60_000));
 const hours = (ms) => Math.max(1, Math.round(ms / 3_600_000));
 export const delay = (ms) => {
   if (ms >= 2 * 3_600_000) return { en: `${hours(ms)} h`, fr: `${hours(ms)} h` };
-  if (ms >= 60_000) return { en: `${minutes(ms)} min`, fr: `${minutes(ms)} min` };
+  // Rounded first: 59.99 s is told "1 min", never "60 s".
+  if (Math.round(ms / 1000) >= 60) return { en: `${minutes(ms)} min`, fr: `${minutes(ms)} min` };
   return { en: `${seconds(ms)} s`, fr: `${seconds(ms)} s` };
 };
 
@@ -172,16 +173,16 @@ export const T = {
   test: {
     /** The outcome of a read, `ago` ms ago (0: just now), the next one in `next` ms. */
     reading: ({ serial, hardware, power }, ago, next) => ({
-      en: `${ago > 0 ? `Last read ${delay(ago).en} ago` : 'Read now'}: Zeversolar inverter ${serial}${hardware ? ` (board ${hardware})` : ''}, ${power} W.${next > 0 ? ` Next read in ${delay(next).en}.` : ''}`,
-      fr: `${ago > 0 ? `Dernière lecture il y a ${delay(ago).fr}` : 'Lu à l’instant'} : onduleur Zeversolar ${serial}${hardware ? ` (carte ${hardware})` : ''}, ${power} W.${next > 0 ? ` Prochaine lecture dans ${delay(next).fr}.` : ''}`,
+      en: `${Math.round(ago / 1000) > 0 ? `Last read ${delay(ago).en} ago` : 'Read now'}: Zeversolar inverter ${serial}${hardware ? ` (board ${hardware})` : ''}, ${power} W.${next > 0 ? ` Next read in ${delay(next).en}.` : ''}`,
+      fr: `${Math.round(ago / 1000) > 0 ? `Dernière lecture il y a ${delay(ago).fr}` : 'Lu à l’instant'} : onduleur Zeversolar ${serial}${hardware ? ` (carte ${hardware})` : ''}, ${power} W.${next > 0 ? ` Prochaine lecture dans ${delay(next).fr}.` : ''}`,
     }),
     asleep: (ago, next) => ({
-      en: `${ago > 0 ? `Last read ${delay(ago).en} ago` : 'Read now'}: the Wi-Fi board of the inverter answers, the inverter is asleep (no sun).${next > 0 ? ` Next read in ${delay(next).en}.` : ''}`,
-      fr: `${ago > 0 ? `Dernière lecture il y a ${delay(ago).fr}` : 'Lu à l’instant'} : la carte Wi-Fi de l’onduleur répond, l’onduleur est en veille (pas de soleil).${next > 0 ? ` Prochaine lecture dans ${delay(next).fr}.` : ''}`,
+      en: `${Math.round(ago / 1000) > 0 ? `Last read ${delay(ago).en} ago` : 'Read now'}: the Wi-Fi board of the inverter answers, the inverter is asleep (no sun).${next > 0 ? ` Next read in ${delay(next).en}.` : ''}`,
+      fr: `${Math.round(ago / 1000) > 0 ? `Dernière lecture il y a ${delay(ago).fr}` : 'Lu à l’instant'} : la carte Wi-Fi de l’onduleur répond, l’onduleur est en veille (pas de soleil).${next > 0 ? ` Prochaine lecture dans ${delay(next).fr}.` : ''}`,
     }),
     failed: (address, err, ago, next) => ({
-      en: `${ago > 0 ? `Last read ${delay(ago).en} ago` : 'Read now'}: the inverter at ${address} could not be read (${reason(err).en}). Next read in ${delay(next).en}.`,
-      fr: `${ago > 0 ? `Dernière lecture il y a ${delay(ago).fr}` : 'Lu à l’instant'} : l’onduleur à l’adresse ${address} n’a pas pu être lu (${reason(err).fr}). Prochaine lecture dans ${delay(next).fr}.`,
+      en: `${Math.round(ago / 1000) > 0 ? `Last read ${delay(ago).en} ago` : 'Read now'}: the inverter at ${address} could not be read (${reason(err).en}). Next read in ${delay(next).en}.`,
+      fr: `${Math.round(ago / 1000) > 0 ? `Dernière lecture il y a ${delay(ago).fr}` : 'Lu à l’instant'} : l’onduleur à l’adresse ${address} n’a pas pu être lu (${reason(err).fr}). Prochaine lecture dans ${delay(next).fr}.`,
     }),
     notYet: (next) => ({
       en: `No read yet with this configuration: the first one comes in ${delay(next).en} (never more than one a minute).`,
