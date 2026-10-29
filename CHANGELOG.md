@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-10-29
+
 ### Fixed
 
 - The counter guard keeps an accepted jump as a floor: a reading back under
@@ -95,7 +97,8 @@ the notes of the version's GitHub Release.
 - A new address of the same inverter reaches the Discovery list at its first
   reading.
 
-[Unreleased]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/LM1LC3N7/gladys-zeversolar/compare/v0.1.3...v0.1.4
